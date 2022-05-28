@@ -1,0 +1,22 @@
+{
+  "name": "binance-bot-grid-strategy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Robin3910/binance-bot-grid-strategy.git"
+  },
+  "author": "rob",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Robin3910/binance-bot-grid-strategy/issues"
+  },
+  "homepage": "https://github.com/Robin3910/binance-bot-grid-strategy#readme",
+  "dependencies": {
+    "ccxt": "^1.84.23"
+  }
+}
