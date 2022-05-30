@@ -1,27 +1,21 @@
 // up 1, down -1
 const GRID_DIRECTION = 1;
-const GRID_NUM = 10;
-const GRID_BUY_QUANTITY = 0.1;
-const GRID_DISTANCE = 20;
-const GRID_STOP_EARN = 50;
 const API_KEY = '';
 const SECRET_KEY = '';
 const COIN = 'BTC/USDT';
-const GRID_START_PRICE = 29500;
-const GRID_TOP_PRICE = 31000;
-const GRID_BOTTOM_PRICE = 28500;
+const GRID_TOP_PRICE = 41000;
+const GRID_BOTTOM_PRICE = 31000;
+const INIT_MONEY = 10000;
+const GRID_PERCENT = 0.005;
 module.exports = {
+    GRID_PERCENT,
+    INIT_MONEY,
     GRID_TOP_PRICE,
     GRID_BOTTOM_PRICE,
-    GRID_DISTANCE,
-    GRID_BUY_QUANTITY,
     GRID_DIRECTION,
-    GRID_NUM,
-    GRID_STOP_EARN,
     API_KEY,
     SECRET_KEY,
     COIN,
-    GRID_START_PRICE,
 }
 /**
  * price ticker structure
