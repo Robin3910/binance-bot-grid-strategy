@@ -1,8 +1,8 @@
 'use strict';
 const ccxt = require('ccxt');
 const config = require('../config/config')
+const fs = require('fs');
 const util = require('../util/common')
-const api = require('../util/api');
 
 const _Grid = []
 // 操作方向，尽量做多，做空风险高
@@ -24,27 +24,23 @@ const _GridPointDis = startPrice * gridPercent;
 const _GridPointAmount = initMoney / ((startPrice - bottomPrice) / _GridPointDis);
 // 最大下单量
 const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
+// 连接binance
+const exchange = connectBinance();
 
-// // 连接binance
-// const exchange = connectBinance();
-//
-// function connectBinance() {
-//     const exchangeId = 'binance';
-//     const exchangeClass = ccxt[exchangeId];
-//     return new exchangeClass({
-//         'apiKey': config.API_KEY,
-//         'secret': config.SECRET_KEY,
-//     });
-// }
-//
-// async function getPrice() {
-//     console.log('start get price')
-//     return await exchange.fetchTicker(config.COIN);
-// }
+function connectBinance() {
+    const exchangeId = 'binance';
+    const exchangeClass = ccxt[exchangeId];
+    return new exchangeClass({
+        'apiKey': config.API_KEY,
+        'secret': config.SECRET_KEY,
+    });
+}
 
-api.createListenKey().then(res=>{
-    console.log(res);
-});
+async function getPrice() {
+    return await exchange.fetchTicker(config.COIN);
+}
+
+let index = 0;
 
 
 function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
@@ -91,20 +87,22 @@ function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
 
 }
 
-function main() {
+function test() {
     let isStart = false;
-    setInterval(async () => {
-        // const priceObj = await getPrice();
-        const priceObj = {};
+    setInterval(() => {
+        const priceObj = {
+            bid: data[index][4],
+            ask: data[index][4]
+        };
+        index++;
         if (!isStart && ((direction === 1 && priceObj.bid <= startPrice) || (direction === -1 && priceObj.bid >= startPrice))) {
             isStart = true;
             console.log(`strategy start, cur price: ${priceObj.bid}`);
         }
         UpdateGrid(priceObj.bid, priceObj.ask, direction);
-    }, 1000);
+    }, 0);
 }
 
 // time, open, highest, lowest, close, volume
 
-// main();
-
+test();

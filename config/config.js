@@ -3,10 +3,11 @@ const GRID_DIRECTION = 1;
 const API_KEY = '';
 const SECRET_KEY = '';
 const COIN = 'BTC/USDT';
-const GRID_TOP_PRICE = 41000;
-const GRID_BOTTOM_PRICE = 31000;
+const GRID_TOP_PRICE = 32000;
+const GRID_BOTTOM_PRICE = 28500;
 const INIT_MONEY = 10000;
 const GRID_PERCENT = 0.005;
+const BASE_URL = "https://fapi.binance.com";
 module.exports = {
     GRID_PERCENT,
     INIT_MONEY,
@@ -16,6 +17,7 @@ module.exports = {
     API_KEY,
     SECRET_KEY,
     COIN,
+    BASE_URL
 }
 /**
  * price ticker structure
