@@ -3,6 +3,8 @@ const ccxt = require('ccxt');
 const config = require('../config/config')
 const util = require('../util/common')
 const api = require('../util/api');
+// 导入WebSocket模块:
+const WebSocket = require('ws');
 
 const _Grid = []
 // 操作方向，尽量做多，做空风险高
@@ -42,9 +44,21 @@ const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
 //     return await exchange.fetchTicker(config.COIN);
 // }
 
-api.createListenKey().then(res=>{
-    console.log(res);
-});
+api.createListenKey().then((data) => {
+    console.log(data.listenKey);
+    let ws = new WebSocket(`wss://fstream-auth.binance.com/ws/btcusdt@markPrice?listenKey=${data.listenKey}`);
+
+    // 打开WebSocket连接后立刻发送一条消息:
+    ws.on('open', function () {
+        console.log(`[CLIENT] open()`);
+        ws.send('Hello!');
+    });
+
+    // 响应收到的消息:
+    ws.on('message', function (message) {
+        console.log(`[CLIENT] Received: ${message}`);
+    });
+})
 
 
 function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
@@ -66,11 +80,11 @@ function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
         || (direction === 1 && _Grid[_Grid.length - 1].price - nowAsksPrice > _GridPointDis)
         // 做空方向，当前价位大于网格最后一次购买价格，并超过了一个网格间距，进行下单
         || (direction === -1 && nowBidsPrice - _Grid[_Grid.length - 1].price > _GridPointDis)) {
-        if(_Grid.length >= maxGridNum) {
+        if (_Grid.length >= maxGridNum) {
             return;
         }
 
-        if((direction === 1 && nowBidsPrice <= startPrice) || (direction === -1 && nowAsksPrice >= startPrice)) {
+        if ((direction === 1 && nowBidsPrice <= startPrice) || (direction === -1 && nowAsksPrice >= startPrice)) {
             let nowPrice = direction === 1 ? nowAsksPrice : nowBidsPrice;
             _Grid.push({
                 // 开仓价
