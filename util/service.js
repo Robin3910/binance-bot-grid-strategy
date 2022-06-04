@@ -39,4 +39,5 @@ service.interceptors.response.use(
 
 module.exports = {
     service,
+    calcHash
 }

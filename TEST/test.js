@@ -1,6 +1,5 @@
 'use strict';
-const ccxt = require('ccxt');
-const config = require('../config/config')
+const config = require('./config')
 const fs = require('fs');
 const util = require('../util/common')
 
@@ -24,24 +23,16 @@ const _GridPointDis = startPrice * gridPercent;
 const _GridPointAmount = initMoney / ((startPrice - bottomPrice) / _GridPointDis);
 // 最大下单量
 const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
-// 连接binance
-const exchange = connectBinance();
 
-function connectBinance() {
-    const exchangeId = 'binance';
-    const exchangeClass = ccxt[exchangeId];
-    return new exchangeClass({
-        'apiKey': config.API_KEY,
-        'secret': config.SECRET_KEY,
-    });
-}
+// 历史数据
+const fileContent = fs.readFileSync(
+    'F:\\WorkSpace\\binance-bot-grid-strategy\\data\\data_2022-06-01_2022-06-05.json');
+const data = JSON.parse(fileContent);
 
-async function getPrice() {
-    return await exchange.fetchTicker(config.COIN);
-}
+// 网格配对次数
+let matchCount = 0;
 
 let index = 0;
-
 
 function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
     // 先判断是否要卖出
@@ -53,7 +44,7 @@ function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
         //     $.Buy(_Grid[_Grid.length - 1].hold.amount);
         _Grid.pop();
         initMoney += _GridPointAmount * gridPercent;
-        console.log(`sell |time: ${util.transTimeStampToDate(data[index - 1][0])}| price: ${nowBidsPrice} | cur asset: ${initMoney}| cur position: ${_Grid.length}`);
+        console.log(`sell |time: ${util.transTimeStampToDate(data[index - 1][0])}| price: ${nowBidsPrice} | cur asset: ${initMoney}| cur position: ${_Grid.length} | matchCount: ${++matchCount}`);
     }
     // 再判断是否要买入
     // 如果当前网格中无数据，且满足低位条件（当前价格小于策略运行价格），进行下单
@@ -62,11 +53,11 @@ function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
         || (direction === 1 && _Grid[_Grid.length - 1].price - nowAsksPrice > _GridPointDis)
         // 做空方向，当前价位大于网格最后一次购买价格，并超过了一个网格间距，进行下单
         || (direction === -1 && nowBidsPrice - _Grid[_Grid.length - 1].price > _GridPointDis)) {
-        if(_Grid.length >= maxGridNum) {
+        if (_Grid.length >= maxGridNum) {
             return;
         }
 
-        if((direction === 1 && nowBidsPrice <= startPrice) || (direction === -1 && nowAsksPrice >= startPrice)) {
+        if ((direction === 1 && nowBidsPrice <= startPrice) || (direction === -1 && nowAsksPrice >= startPrice)) {
             let nowPrice = direction === 1 ? nowAsksPrice : nowBidsPrice;
             _Grid.push({
                 // 开仓价
@@ -81,7 +72,8 @@ function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
             // let tradeInfo = direction === 1 ?  : $.Buy(_GridPointAmount)
             _Grid[_Grid.length - 1].hold.price = nowPrice;
             _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-            console.log(`buy in|time: ${util.transTimeStampToDate(data[index - 1][0])} | price: ${nowPrice} | cur position: ${_Grid.length}`);
+            console.log(
+                `buy in|time: ${util.transTimeStampToDate(data[index - 1][0])} | price: ${nowPrice} | cur position: ${_Grid.length}`);
         }
     }
 
@@ -95,7 +87,8 @@ function test() {
             ask: data[index][4]
         };
         index++;
-        if (!isStart && ((direction === 1 && priceObj.bid <= startPrice) || (direction === -1 && priceObj.bid >= startPrice))) {
+        if (!isStart && ((direction === 1 && priceObj.bid <= startPrice) ||
+            (direction === -1 && priceObj.bid >= startPrice))) {
             isStart = true;
             console.log(`strategy start, cur price: ${priceObj.bid}`);
         }

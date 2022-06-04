@@ -2,7 +2,6 @@
 const GRID_DIRECTION = 1;
 const API_KEY = '';
 const SECRET_KEY = '';
-const COIN = 'ethusdt';
 const GRID_TOP_PRICE = 2000;
 const GRID_BOTTOM_PRICE = 1750;
 const INIT_MONEY = 20000;

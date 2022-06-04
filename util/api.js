@@ -31,6 +31,18 @@ function login(username,password) {
         }
     })
 }
+
+function getBalance(){
+    const ts = Date.now();
+    return service.service({
+        url: '/fapi/v2/balance',
+        method: 'get',
+        params: {
+            timestamp: ts,
+            signature: service.calcHash({timestamp: ts})
+        }
+    })
+}
 function getuserinfo_data() {
     getuserinfo().then(response => {
         const data = response.data
@@ -51,5 +63,6 @@ function login_data(username,password) {
 module.exports = {
     ping,
     createListenKey,
+    getBalance,
 }
 

@@ -27,26 +27,12 @@ const _GridPointAmount = initMoney / ((startPrice - bottomPrice) / _GridPointDis
 // 最大下单量
 const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
 
-// // 连接binance
-// const exchange = connectBinance();
-//
-// function connectBinance() {
-//     const exchangeId = 'binance';
-//     const exchangeClass = ccxt[exchangeId];
-//     return new exchangeClass({
-//         'apiKey': config.API_KEY,
-//         'secret': config.SECRET_KEY,
-//     });
-// }
-//
-// async function getPrice() {
-//     console.log('start get price')
-//     return await exchange.fetchTicker(config.COIN);
-// }
+let isHandling = false;
 
+// 生成listenKey并订阅市场消息
 api.createListenKey().then((data) => {
     console.log(data.listenKey);
-    let ws = new WebSocket(`wss://fstream-auth.binance.com/ws/btcusdt@markPrice?listenKey=${data.listenKey}`);
+    let ws = new WebSocket(`wss://fstream-auth.binance.com/ws/${config.COIN}@markPrice?listenKey=${data.listenKey}`);
 
     // 打开WebSocket连接后立刻发送一条消息:
     ws.on('open', function () {
@@ -56,12 +42,20 @@ api.createListenKey().then((data) => {
 
     // 响应收到的消息:
     ws.on('message', function (message) {
+        if(isHandling) {
+            console.log('bot is handle previous price...');
+            return;
+        }
         console.log(`[CLIENT] Received: ${message}`);
+        const price = message.p;
+        UpdateGrid(price, price, direction, message.e);
     });
-})
+});
 
 
-function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
+
+function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
+    isHandling = true;
     // 先判断是否要卖出
     // 如果当前价格超过栈顶的平仓价，则平仓
     if (_Grid.length > 0 &&
@@ -103,6 +97,7 @@ function UpdateGrid(nowBidsPrice, nowAsksPrice, direction) {
         }
     }
 
+    isHandling = false;
 }
 
 function main() {
