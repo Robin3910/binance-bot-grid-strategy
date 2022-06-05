@@ -1,7 +1,8 @@
 'use strict';
-const config = require('../config/config')
-const util = require('../util/common')
+const config = require('../config/config');
+const util = require('../util/common');
 const api = require('../util/api');
+const fs = require('fs');
 // 导入WebSocket模块
 const WebSocket = require('ws');
 
@@ -25,19 +26,23 @@ const _GridPointAmount = initMoney / ((startPrice - bottomPrice) / _GridPointDis
 // 最大下单量
 const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
 
+fs.writeFileSync(config.LOG_FILE_PATH, `bot start|${util.transTimeStampToDate(Date.now())}|topPrice: ${topPrice}| bottomPrice: ${bottomPrice}|startPrice: ${startPrice}|gridDistance:${_GridPointDis}|gridAmount: ${_GridPointAmount}|maxGridNum: ${maxGridNum}`, {flag: 'a+'});
+
 // 匹配次数
 let matchCount = 0;
 // 当前是否在处理
 let isHandling = false;
 // 策略是否开始运行（达到触发价格后才会开始运行）
 let isStart = false;
+// 通知手机bot正常
+let notifyCountDown = 0;
 
 async function queryOrderStatus(retryTime) {
     console.log(`query orders...`);
     let queryOrders = await api.queryOrders({
         symbol: config.COIN,
     });
-    // 查询的订单如果已经成交或取消
+    // 查询的订单如果已经成交或取消。如果queryOrders数组为空，则说明挂单已成交
     while (queryOrders.length) {
         if (!retryTime) {
             console.log(`place order failed. wait for next tick`);
@@ -75,7 +80,11 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         if (orderStatus) {
             console.log(`sell order success: ${orderRes['orderId']}`);
             _Grid.pop();
-            console.log(`sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}`);
+            const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}`;
+            console.log(logStr);
+            fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
+            util.notifyToPhone(logStr);
+
         } else {
             // 撤销订单
             api.cancelOrder({
@@ -119,7 +128,10 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
 
                 _Grid[_Grid.length - 1].hold.price = nowPrice;
                 _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-                console.log(`buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}`);
+                const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}`;
+                console.log(logStr);
+                fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
+                util.notifyToPhone(logStr);
             }
         }
     }
@@ -141,6 +153,12 @@ function start(){
 
         // 响应收到的消息:
         ws.on('message', async function (message) {
+            notifyCountDown++;
+            // 定时提醒机器人正常
+            if(notifyCountDown > config.NOTIFY_COUNTDOWN) {
+                util.notifyToPhone('bot is ok');
+                notifyCountDown = 0;
+            }
             const msgData = JSON.parse(message.toString());
             if (msgData['error']) {
                 console.log('error msg: ', msgData['error']);

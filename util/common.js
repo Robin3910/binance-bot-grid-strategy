@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 function transTimeStampToDate(timeStamp) {
     const date = new Date(timeStamp);
     const Y = date.getFullYear() + '-';
@@ -9,7 +11,22 @@ function transTimeStampToDate(timeStamp) {
     return Y + M + D + h + m + s;
 }
 
-module.exports = {
+function notifyToPhone(content) {
+    const config = {
+        method: 'get',
+        url: `https://sctapi.ftqq.com/SCT143186TIvKuCgmwWnzzzGQ6mE5qmyFU.send?title=trade&desp=${encodeURIComponent(content)}`,
+    };
 
+    axios(config)
+        .then(function (response) {
+            console.log(JSON.stringify(response.data));
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+}
+
+module.exports = {
     transTimeStampToDate,
+    notifyToPhone
 }
