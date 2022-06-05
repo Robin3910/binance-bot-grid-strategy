@@ -26,7 +26,7 @@ const _GridPointAmount = initMoney / ((startPrice - bottomPrice) / _GridPointDis
 // 最大下单量
 const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
 
-fs.writeFileSync(config.LOG_FILE_PATH, `bot start|${util.transTimeStampToDate(Date.now())}|topPrice: ${topPrice}| bottomPrice: ${bottomPrice}|startPrice: ${startPrice}|gridDistance:${_GridPointDis}|gridAmount: ${_GridPointAmount}|maxGridNum: ${maxGridNum}`, {flag: 'a+'});
+fs.writeFileSync(config.LOG_FILE_PATH, `bot start|${util.transTimeStampToDate(Date.now())}|topPrice: ${topPrice}| bottomPrice: ${bottomPrice}|startPrice: ${startPrice}|gridDistance:${_GridPointDis}|gridAmount: ${_GridPointAmount}|maxGridNum: ${maxGridNum}\n`, {flag: 'a+'});
 
 // 匹配次数
 let matchCount = 0;
@@ -80,7 +80,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         if (orderStatus) {
             console.log(`sell order success: ${orderRes['orderId']}`);
             _Grid.pop();
-            const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}`;
+            const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}\n`;
             console.log(logStr);
             fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
             util.notifyToPhone(logStr);
@@ -128,7 +128,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
 
                 _Grid[_Grid.length - 1].hold.price = nowPrice;
                 _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-                const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}`;
+                const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
                 console.log(logStr);
                 fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
                 util.notifyToPhone(logStr);
