@@ -1,38 +1,20 @@
-
 const service = require('./service');
 
-function ping(){
+function ping() {
     return service.service({
         url: '/fapi/v1/ping',
         method: 'get'
     });
 }
 
-function createListenKey(){
+function createListenKey() {
     return service.service({
         url: '/fapi/v1/listenKey',
         method: 'post'
     });
 }
 
-function getuserinfo() {
-    return service.service({
-        url: '/account/userinfo',
-        method: 'get'
-    })
-}
-function login(username,password) {
-    return service.service({
-        url: '/account/login',
-        method: 'post',
-        data: {
-            username,
-            password
-        }
-    })
-}
-
-function getBalance(){
+function getBalance() {
     const ts = Date.now();
     return service.service({
         url: '/fapi/v2/balance',
@@ -43,26 +25,72 @@ function getBalance(){
         }
     })
 }
-function getuserinfo_data() {
-    getuserinfo().then(response => {
-        const data = response.data
-        console.log(data)
-    }).catch(error => {
-        console.log(error)
+
+/**
+ * 下单接口
+ * @param params
+ * symbol: ethusdt
+ * side: BUY/SELL
+ * type: MARKET
+ * quantity: 0.003 需要将usdt转化成目标eth单位
+ */
+function placeOrder(params) {
+    params.timestamp = Date.now();
+    return service.service({
+        url: '/fapi/v1/order',
+        method: 'post',
+        params: {
+            ...params,
+            signature: service.calcHash(params)
+        }
     })
 }
-function login_data(username,password) {
-    login(username,password).then(response => {
-        const data = response.data
-        console.log(data)
-    }).catch(error => {
-        console.log(error)
+
+/**
+ * 挂单后需要确认当前订单已经成交了，才能进行下一步操作
+ * 查询三次还未成单后，撤销订单
+ * @param params
+ * symbol: ethusdt
+ * orderId: 8389765524817242182
+ * @returns {AxiosPromise}
+ */
+function queryOrder(params) {
+    params.timestamp = Date.now();
+    return service.service({
+        url: '/fapi/v1/openOrder',
+        method: 'get',
+        params: {
+            ...params,
+            signature: service.calcHash(params)
+        }
     })
+}
+
+/**
+ * 撤销订单接口
+ * @param params
+ * symbol: ethusdt
+ * orderId: 8389765524817242182
+ * @returns {AxiosPromise}
+ */
+function cancelOrder(params) {
+    params.timestamp = Date.now();
+    return service.service({
+        url: '/fapi/v1/order',
+        method: 'delete',
+        params: {
+            ...params,
+            signature: service.calcHash(params)
+        }
+    });
 }
 
 module.exports = {
     ping,
     createListenKey,
     getBalance,
+    placeOrder,
+    queryOrder,
+    cancelOrder
 }
 

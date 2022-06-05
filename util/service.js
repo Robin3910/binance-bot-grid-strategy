@@ -12,7 +12,6 @@ function calcHash(paramsObject){
     const queryString = Object.keys(paramsObject).map((key) => {
         return `${encodeURIComponent(key)}=${paramsObject[key]}`;
     }).join('&');
-    console.log(queryString);
     return CryptoJS.HmacSHA256(queryString, CONFIG.SECRET_KEY).toString();
 }
 
