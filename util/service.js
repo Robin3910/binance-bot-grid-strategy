@@ -17,8 +17,12 @@ function calcHash(paramsObject){
 
 // request拦截器,拦截每一个请求加上请求头
 service.interceptors.request.use(config => {
-    config.headers['Content-Type'] = 'application/json';
-    config.headers['X-MBX-APIKEY'] = CONFIG.API_KEY;
+    config.headers.get['Content-Type'] = 'application/json';
+    config.headers.get['X-MBX-APIKEY'] = CONFIG.API_KEY;
+    config.headers.post['Content-Type'] = 'application/json';
+    config.headers.post['X-MBX-APIKEY'] = CONFIG.API_KEY;
+    config.headers.delete['Content-Type'] = 'application/json';
+    config.headers.delete['X-MBX-APIKEY'] = CONFIG.API_KEY;
     return config;
 }, error => {
     console.log(error) // for debug
@@ -28,9 +32,10 @@ service.interceptors.request.use(config => {
 // respone拦截器 拦截到所有的response，然后先做一些判断
 service.interceptors.response.use(
     response => {
-        if(response.status === 200) {
-            return response.data;
-        }
+        // if(response.status === 200) {
+        //     return response.data;
+        // }
+        return response.data;
     },error => {
         console.log('err' + error)// for debug
         return Promise.reject(error)

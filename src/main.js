@@ -8,7 +8,6 @@ const WebSocket = require('ws');
 const _Grid = []
 // 操作方向，尽量做多，做空风险高
 const direction = config.GRID_DIRECTION;
-//const _GridPointAmount = config.GRID_BUY_QUANTITY;
 // 区间上限
 const topPrice = config.GRID_TOP_PRICE;
 // 区间下限
@@ -33,68 +32,24 @@ let isHandling = false;
 // 策略是否开始运行（达到触发价格后才会开始运行）
 let isStart = false;
 
-// test code
-// api.queryOrder({
-//     symbol: config.COIN,
-//     // orderId: '8389765524821402612'
-// }).then(res => {
-//     console.log(res);
-// })
-
-// 生成listenKey并订阅市场消息
-api.createListenKey().then((data) => {
-    console.log(`listenKey: ${data.listenKey}`);
-    let ws = new WebSocket(`wss://fstream-auth.binance.com/ws/${config.COIN}@markPrice?listenKey=${data.listenKey}`);
-
-    // 打开WebSocket连接后立刻发送一条消息:
-    ws.on('open', function () {
-        console.log(`[CLIENT] open()`);
-        ws.send('Hello garlic chives!');
-    });
-
-    // 响应收到的消息:
-    ws.on('message', async function (message) {
-        const msgData = JSON.parse(message.toString());
-        if (msgData['error']) {
-            console.log('error msg: ', message);
-            return;
-        }
-        if (isHandling) {
-            console.log('bot is handling previous price...');
-            return;
-        }
-        console.log(`[CLIENT] Received: ${message}`);
-        const price = parseFloat(msgData.p);
-        if (!isStart && ((direction === 1 && price <= startPrice) || (direction === -1 && price >= startPrice))) {
-            isStart = true;
-            console.log(`strategy start, cur price: ${price}`);
-        }
-        if (price) {
-            await UpdateGrid(price, price, direction, msgData.E);
-        }
-    });
-});
-
-async function queryOrderStatus(orderId, retryTime) {
-    console.log(`query order: ${orderId}...`);
-    let queryOrder = await api.queryOrder({
+async function queryOrderStatus(retryTime) {
+    console.log(`query orders...`);
+    let queryOrders = await api.queryOrders({
         symbol: config.COIN,
-        orderId: orderId
     });
-    // 查询的订单如果已经成交或取消，将返回: "Order does not exist." code = -2013
-    while (queryOrder.code !== -2013) {
+    // 查询的订单如果已经成交或取消
+    while (queryOrders.length) {
         if (!retryTime) {
-            console.log(`orderId: ${orderId} | order failed`);
+            console.log(`place order failed. wait for next tick`);
             break;
         }
-        console.log(`query order: ${orderId}| remain retryTime: ${retryTime}`);
-        queryOrder = await api.queryOrder({
+        console.log(`query order | remain retryTime: ${retryTime}`);
+        queryOrders = await api.queryOrders({
             symbol: config.COIN,
-            orderId: orderId
         });
         retryTime--;
     }
-    return queryOrder.code === -2013;
+    return !queryOrders.length;
 }
 
 async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
@@ -110,16 +65,11 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
             symbol: config.COIN,
             type: 'MARKET',
             side: 'SELL',
-            quantity: _GridPointAmount / nowBidsPrice
+            quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
         });
 
-        // console.log(`sell order success: ${orderRes['orderId']}`);
-        // _Grid.pop();
-        // console.log(`sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}`);
-
-
         // 查看订单是否已经成交
-        const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
+        const orderStatus = await queryOrderStatus(3);
 
         // 如果成交，则记录
         if (orderStatus) {
@@ -152,23 +102,10 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
                 symbol: config.COIN,
                 type: 'MARKET',
                 side: 'BUY',
-                quantity: _GridPointAmount / nowBidsPrice
+                quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
             });
 
-            // _Grid.push({
-            //     // 开仓价
-            //     price: nowPrice,
-            //     // 当前持有数量
-            //     hold: {price: nowPrice, amount: _GridPointAmount / nowBidsPrice},
-            //     // 平仓价位
-            //     coverPrice: nowPrice + direction * _GridPointDis
-            // });
-            //
-            // _Grid[_Grid.length - 1].hold.price = nowPrice;
-            // _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-            // console.log(`buy in|time: ${util.transTimeStampToDate(ts)} | price: ${nowPrice} | cur position: ${_Grid.length}`);
-
-            const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
+            const orderStatus = await queryOrderStatus(3);
 
             if (orderStatus) {
                 _Grid.push({
@@ -182,10 +119,59 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
 
                 _Grid[_Grid.length - 1].hold.price = nowPrice;
                 _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-                console.log(`buy in|time: ${util.transTimeStampToDate(ts)} | price: ${nowPrice} | cur position: ${_Grid.length}`);
+                console.log(`buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}`);
             }
         }
     }
 
     isHandling = false;
 }
+
+function start(){
+    // 生成listenKey并订阅市场消息
+    api.createListenKey().then((data) => {
+        console.log(`listenKey: ${data.listenKey}`);
+        let ws = new WebSocket(`wss://fstream-auth.binance.com/ws/${config.COIN}@markPrice?listenKey=${data.listenKey}`);
+
+        // 打开WebSocket连接后立刻发送一条消息:
+        ws.on('open', function () {
+            console.log(`[CLIENT] open()`);
+            ws.send('Hello garlic chives!');
+        });
+
+        // 响应收到的消息:
+        ws.on('message', async function (message) {
+            const msgData = JSON.parse(message.toString());
+            if (msgData['error']) {
+                console.log('error msg: ', msgData['error']);
+                return;
+            }
+            if (isHandling) {
+                console.log('bot is handling previous price...');
+                return;
+            }
+            console.log(`[CLIENT] Received: ${message}`);
+            const price = parseFloat(msgData.p);
+            if (!isStart && ((direction === 1 && price <= startPrice) || (direction === -1 && price >= startPrice))) {
+                isStart = true;
+                console.log(`strategy start, cur price: ${price}`);
+            }
+            if (price) {
+                await UpdateGrid(price, price, direction, msgData.E);
+            }
+        });
+    });
+}
+
+// async function test(){
+//     const orderRes = await api.placeOrder({
+//         symbol: config.COIN,
+//         type: 'MARKET',
+//         side: 'BUY',
+//         quantity: 0.003321738921783921
+//     });
+//     console.log(orderRes);
+// }
+
+start();
+// test();

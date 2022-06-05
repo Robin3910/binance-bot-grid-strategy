@@ -54,10 +54,10 @@ function placeOrder(params) {
  * orderId: 8389765524817242182
  * @returns {AxiosPromise}
  */
-function queryOrder(params) {
+function queryOrders(params) {
     params.timestamp = Date.now();
     return service.service({
-        url: '/fapi/v1/openOrder',
+        url: '/fapi/v1/openOrders',
         method: 'get',
         params: {
             ...params,
@@ -90,7 +90,7 @@ module.exports = {
     createListenKey,
     getBalance,
     placeOrder,
-    queryOrder,
+    queryOrders,
     cancelOrder
 }
 
