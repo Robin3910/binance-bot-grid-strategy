@@ -1,4 +1,6 @@
 const service = require('./service');
+const CONFIG = require('../config/config');
+const axios = require('axios');
 
 function ping() {
     return service.service({
@@ -47,11 +49,11 @@ function placeOrder(params) {
 }
 
 /**
+ * 查询所有挂单
  * 挂单后需要确认当前订单已经成交了，才能进行下一步操作
  * 查询三次还未成单后，撤销订单
  * @param params
  * symbol: ethusdt
- * orderId: 8389765524817242182
  * @returns {AxiosPromise}
  */
 function queryOrders(params) {
@@ -67,6 +69,39 @@ function queryOrders(params) {
 }
 
 /**
+ * 查询单个挂单
+ * @param params
+ * symbol: ethusdt
+ * orderId: 8389765524955795196
+ * @returns {AxiosPromise}
+ */
+async function querySingleOrder(params) {
+    return new Promise((resolve, reject) => {
+        params.timestamp = Date.now();
+        params.signature = service.calcHash(params);
+        const queryString = Object.keys(params).map((key) => {
+            return `${encodeURIComponent(key)}=${params[key]}`;
+        }).join('&');
+        const config = {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-MBX-APIKEY': CONFIG.API_KEY,
+            },
+            url: `https://fapi.binance.com/fapi/v1/openOrder?${queryString}`,
+        };
+
+        axios(config)
+            .then(function (response) {
+                resolve(response.data);
+            }).catch(err => {
+            resolve(err.response.data);
+        });
+    })
+
+}
+
+/**
  * 撤销订单接口
  * @param params
  * symbol: ethusdt
@@ -74,15 +109,28 @@ function queryOrders(params) {
  * @returns {AxiosPromise}
  */
 function cancelOrder(params) {
-    params.timestamp = Date.now();
-    return service.service({
-        url: '/fapi/v1/order',
-        method: 'delete',
-        params: {
-            ...params,
-            signature: service.calcHash(params)
-        }
-    });
+    return new Promise((resolve, reject) => {
+        params.timestamp = Date.now();
+        params.signature = service.calcHash(params);
+        const queryString = Object.keys(params).map((key) => {
+            return `${encodeURIComponent(key)}=${params[key]}`;
+        }).join('&');
+        const config = {
+            method: 'delete',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-MBX-APIKEY': CONFIG.API_KEY,
+            },
+            url: `https://fapi.binance.com/fapi/v1/order?${queryString}`,
+        };
+
+        axios(config)
+            .then(function (response) {
+                resolve(response.data);
+            }).catch(err => {
+                resolve(err.response.data);
+        });
+    })
 }
 
 module.exports = {
@@ -91,6 +139,7 @@ module.exports = {
     getBalance,
     placeOrder,
     queryOrders,
-    cancelOrder
+    cancelOrder,
+    querySingleOrder
 }
 

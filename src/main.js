@@ -37,24 +37,27 @@ let isStart = false;
 // 通知手机bot正常
 let notifyCountDown = 0;
 
-async function queryOrderStatus(retryTime) {
+async function queryOrderStatus(orderId, retryTime) {
     console.log(`query orders...`);
-    let queryOrders = await api.queryOrders({
+    let queryOrder = await api.querySingleOrder({
         symbol: config.COIN,
+        orderId: orderId
     });
-    // 查询的订单如果已经成交或取消。如果queryOrders数组为空，则说明挂单已成交
-    while (queryOrders.length) {
+    // 查询的订单如果已经成交或取消。如果queryOrder的orderId查不到，则说明挂单已成交
+    while (queryOrder.orderId) {
         if (!retryTime) {
             console.log(`place order failed. wait for next tick`);
             break;
         }
         console.log(`query order | remain retryTime: ${retryTime}`);
-        queryOrders = await api.queryOrders({
+        queryOrder = await api.querySingleOrder({
             symbol: config.COIN,
+            orderId: orderId
         });
         retryTime--;
     }
-    return !queryOrders.length;
+    // 订单已成交返回true
+    return !queryOrder.orderId;
 }
 
 async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
@@ -74,7 +77,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         });
 
         // 查看订单是否已经成交
-        const orderStatus = await queryOrderStatus(3);
+        const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
 
         // 如果成交，则记录
         if (orderStatus) {
@@ -90,7 +93,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
             api.cancelOrder({
                 symbol: config.COIN,
                 orderId: orderRes['orderId']
-            })
+            });
         }
     }
     // 再判断是否要买入
@@ -114,7 +117,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
                 quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
             });
 
-            const orderStatus = await queryOrderStatus(3);
+            const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
 
             if (orderStatus) {
                 _Grid.push({
@@ -132,6 +135,12 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
                 console.log(logStr);
                 fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
                 util.notifyToPhone(logStr);
+            } else {
+                // 撤销订单
+                api.cancelOrder({
+                    symbol: config.COIN,
+                    orderId: orderRes['orderId']
+                });
             }
         }
     }
@@ -190,12 +199,12 @@ function start(){
 }
 
 // async function test(){
-//     const orderRes = await api.placeOrder({
-//         symbol: config.COIN,
-//         type: 'MARKET',
-//         side: 'BUY',
-//         quantity: 0.003321738921783921
-//     });
+//     const orderRes = await queryOrderStatus('8389765524959610475', 3);
+//     // const res = await api.cancelOrder({
+//     //     symbol: config.COIN,
+//     //     orderId: '8389765524959610475'
+//     // });
+//     // console.log(res);
 //     console.log(orderRes);
 // }
 
