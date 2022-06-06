@@ -76,25 +76,32 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
             quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
         });
 
-        // 查看订单是否已经成交
-        const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
+        console.log(`sell order success: ${orderRes['orderId']}`);
+        _Grid.pop();
+        const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}\n`;
+        console.log(logStr);
+        fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
+        util.notifyToPhone(logStr);
 
-        // 如果成交，则记录
-        if (orderStatus) {
-            console.log(`sell order success: ${orderRes['orderId']}`);
-            _Grid.pop();
-            const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}\n`;
-            console.log(logStr);
-            fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
-            util.notifyToPhone(logStr);
-
-        } else {
-            // 撤销订单
-            api.cancelOrder({
-                symbol: config.COIN,
-                orderId: orderRes['orderId']
-            });
-        }
+        // // 查看订单是否已经成交
+        // const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
+        //
+        // // 如果成交，则记录
+        // if (orderStatus) {
+        //     console.log(`sell order success: ${orderRes['orderId']}`);
+        //     _Grid.pop();
+        //     const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}\n`;
+        //     console.log(logStr);
+        //     fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
+        //     util.notifyToPhone(logStr);
+        //
+        // } else {
+        //     // 撤销订单
+        //     api.cancelOrder({
+        //         symbol: config.COIN,
+        //         orderId: orderRes['orderId']
+        //     });
+        // }
     }
     // 再判断是否要买入
     // 如果当前网格中无数据，且满足低位条件（当前价格小于策略运行价格），进行下单
@@ -117,31 +124,47 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
                 quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
             });
 
-            const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
+            _Grid.push({
+                // 开仓价
+                price: nowPrice,
+                // 当前持有数量
+                hold: {price: nowPrice, amount: _GridPointAmount / nowBidsPrice},
+                // 平仓价位
+                coverPrice: nowPrice + direction * _GridPointDis
+            });
 
-            if (orderStatus) {
-                _Grid.push({
-                    // 开仓价
-                    price: nowPrice,
-                    // 当前持有数量
-                    hold: {price: nowPrice, amount: _GridPointAmount / nowBidsPrice},
-                    // 平仓价位
-                    coverPrice: nowPrice + direction * _GridPointDis
-                });
+            _Grid[_Grid.length - 1].hold.price = nowPrice;
+            _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
+            const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
+            console.log(logStr);
+            fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
+            util.notifyToPhone(logStr);
 
-                _Grid[_Grid.length - 1].hold.price = nowPrice;
-                _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-                const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
-                console.log(logStr);
-                fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
-                util.notifyToPhone(logStr);
-            } else {
-                // 撤销订单
-                api.cancelOrder({
-                    symbol: config.COIN,
-                    orderId: orderRes['orderId']
-                });
-            }
+            // const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
+            //
+            // if (orderStatus) {
+            //     _Grid.push({
+            //         // 开仓价
+            //         price: nowPrice,
+            //         // 当前持有数量
+            //         hold: {price: nowPrice, amount: _GridPointAmount / nowBidsPrice},
+            //         // 平仓价位
+            //         coverPrice: nowPrice + direction * _GridPointDis
+            //     });
+            //
+            //     _Grid[_Grid.length - 1].hold.price = nowPrice;
+            //     _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
+            //     const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
+            //     console.log(logStr);
+            //     fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
+            //     util.notifyToPhone(logStr);
+            // } else {
+            //     // 撤销订单
+            //     api.cancelOrder({
+            //         symbol: config.COIN,
+            //         orderId: orderRes['orderId']
+            //     });
+            // }
         }
     }
 
