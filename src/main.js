@@ -151,6 +151,14 @@ function start(){
             ws.send('Hello garlic chives!');
         });
 
+        ws.on('close', function (m) {
+            console.log(`[CLIENT] close(), ${m}`);
+            ws.send('ws connection close!');
+        });
+        ws.on('error', function (m) {
+            console.log(`[CLIENT] error(), ${m}`);
+            ws.send('ws connection error!');
+        });
         // 响应收到的消息:
         ws.on('message', async function (message) {
             notifyCountDown++;
