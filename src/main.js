@@ -196,7 +196,8 @@ function start(){
             notifyCountDown++;
             // 定时提醒机器人正常
             if(notifyCountDown > config.NOTIFY_COUNTDOWN) {
-                util.notifyToPhone('bot is ok');
+                ws.send('pong');
+                api.ping();
                 notifyCountDown = 0;
             }
             const msgData = JSON.parse(message.toString());

@@ -9,7 +9,7 @@ const INIT_MONEY = 80; // usdt
 const GRID_PERCENT = 0.006;
 const BASE_URL = "https://fapi.binance.com";
 const LOG_FILE_PATH = './log.txt';
-const NOTIFY_COUNTDOWN = 12*60*60;
+const NOTIFY_COUNTDOWN = 60;
 module.exports = {
     GRID_PERCENT,
     INIT_MONEY,
