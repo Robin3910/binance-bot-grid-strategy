@@ -9,6 +9,7 @@ const INIT_MONEY = 80; // usdt
 const GRID_PERCENT = 0.006;
 const BASE_URL = "https://fapi.binance.com";
 const LOG_FILE_PATH = './log.txt';
+const GRID_DATA = './data.json';
 const NOTIFY_COUNTDOWN = 60;
 module.exports = {
     GRID_PERCENT,
@@ -21,7 +22,8 @@ module.exports = {
     COIN,
     LOG_FILE_PATH,
     BASE_URL,
-    NOTIFY_COUNTDOWN
+    NOTIFY_COUNTDOWN,
+    GRID_DATA
 }
 /**
  * price ticker structure

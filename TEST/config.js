@@ -15,7 +15,6 @@ module.exports = {
     GRID_DIRECTION,
     API_KEY,
     SECRET_KEY,
-    COIN,
     BASE_URL
 }
 /**

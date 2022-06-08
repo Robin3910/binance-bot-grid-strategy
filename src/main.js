@@ -6,7 +6,14 @@ const fs = require('fs');
 // 导入WebSocket模块
 const WebSocket = require('ws');
 
-const _Grid = []
+let _Grid
+const gridDataContent = fs.readFileSync(config.GRID_DATA);
+try{
+    _Grid = JSON.parse(gridDataContent);
+}catch (e) {
+    _Grid = [];
+}
+
 // 操作方向，尽量做多，做空风险高
 const direction = config.GRID_DIRECTION;
 // 区间上限
@@ -71,17 +78,18 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
             (direction === -1 && nowAsksPrice <= _Grid[_Grid.length - 1].coverPrice))) {
 
         // 下卖单
-        const orderRes = await api.placeOrder({
-            symbol: config.COIN,
-            type: 'MARKET',
-            side: 'SELL',
-            quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
-        });
+        // const orderRes = await api.placeOrder({
+        //     symbol: config.COIN,
+        //     type: 'MARKET',
+        //     side: 'SELL',
+        //     quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
+        // });
 
-        console.log(`sell order success: ${orderRes['orderId']}`);
+        console.log(`sell order success`);
         _Grid.pop();
         const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}\n`;
         console.log(logStr);
+        fs.writeFileSync(config.GRID_DATA, JSON.stringify(_Grid), {flag: 'w'});
         fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
         util.notifyToPhone(0, logStr);
 
@@ -119,12 +127,12 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         if ((direction === 1 && nowBidsPrice <= startPrice) || (direction === -1 && nowAsksPrice >= startPrice)) {
             let nowPrice = direction === 1 ? nowAsksPrice : nowBidsPrice;
 
-            const orderRes = await api.placeOrder({
-                symbol: config.COIN,
-                type: 'MARKET',
-                side: 'BUY',
-                quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
-            });
+            // const orderRes = await api.placeOrder({
+            //     symbol: config.COIN,
+            //     type: 'MARKET',
+            //     side: 'BUY',
+            //     quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
+            // });
 
             _Grid.push({
                 // 开仓价
@@ -137,8 +145,9 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
 
             _Grid[_Grid.length - 1].hold.price = nowPrice;
             _Grid[_Grid.length - 1].hold.amount = _GridPointAmount;
-            const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
+            const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
             console.log(logStr);
+            fs.writeFileSync(config.GRID_DATA, JSON.stringify(_Grid), {flag: 'w'});
             fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
             util.notifyToPhone(1, logStr);
 
@@ -175,7 +184,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
 
 function start(){
     if(ws){
-	ws.close();
+	    ws.close();
     }
     // 生成listenKey并订阅市场消息
     api.createListenKey().then((data) => {
