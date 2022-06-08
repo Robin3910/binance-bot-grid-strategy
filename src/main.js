@@ -36,6 +36,8 @@ let isHandling = false;
 let isStart = false;
 // 通知手机bot正常
 let notifyCountDown = 0;
+// websocket连接对象
+let ws;
 
 async function queryOrderStatus(orderId, retryTime) {
     console.log(`query orders...`);
@@ -172,10 +174,13 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
 }
 
 function start(){
+    if(ws){
+	ws.close();
+    }
     // 生成listenKey并订阅市场消息
     api.createListenKey().then((data) => {
         console.log(`listenKey: ${data.listenKey}`);
-        let ws = new WebSocket(`wss://fstream-auth.binance.com/ws/${config.COIN}@markPrice?listenKey=${data.listenKey}`);
+        ws = new WebSocket(`wss://fstream-auth.binance.com/ws/${config.COIN}@markPrice?listenKey=${data.listenKey}`);
 
         // 打开WebSocket连接后立刻发送一条消息:
         ws.on('open', function () {
@@ -235,5 +240,11 @@ function start(){
 //     console.log(orderRes);
 // }
 
+// 每过3小时重新建立ws连接
 start();
+setInterval(()=>{
+	console.log(`${util.transTimeStampToDate(Date.now())}, rebuild websocket connection`);
+    start();
+}, 3 * 60 * 60 * 1000);
+
 // test();
