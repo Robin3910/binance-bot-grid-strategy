@@ -83,7 +83,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         const logStr = `sell |time: ${util.transTimeStampToDate(ts)}| price: ${nowBidsPrice} | cur position: ${_Grid.length}| matchCount: ${++matchCount}\n`;
         console.log(logStr);
         fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
-        util.notifyToPhone(logStr);
+        util.notifyToPhone(0, logStr);
 
         // // 查看订单是否已经成交
         // const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
@@ -140,7 +140,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
             const logStr = `buy in|time: ${util.transTimeStampToDate(ts)}| buy order: ${orderRes['orderId']}| price: ${nowPrice} | cur position: ${_Grid.length}\n`;
             console.log(logStr);
             fs.writeFileSync(config.LOG_FILE_PATH, logStr, {flag: 'a+'});
-            util.notifyToPhone(logStr);
+            util.notifyToPhone(1, logStr);
 
             // const orderStatus = await queryOrderStatus(orderRes['orderId'], 3);
             //

@@ -11,10 +11,12 @@ function transTimeStampToDate(timeStamp) {
     return Y + M + D + h + m + s;
 }
 
-function notifyToPhone(content) {
+function notifyToPhone(tradeType, content) {
+    // 1 buy 0 sell
+    const type = tradeType === 1 ? 'buy' : 'sell';
     const config = {
         method: 'get',
-        url: `https://sctapi.ftqq.com/SCT143186TIvKuCgmwWnzzzGQ6mE5qmyFU.send?title=trade&desp=${encodeURIComponent(content)}`,
+        url: `https://sctapi.ftqq.com/SCT143186TIvKuCgmwWnzzzGQ6mE5qmyFU.send?title=${type}&desp=${encodeURIComponent(content)}`,
     };
 
     axios(config)
