@@ -191,13 +191,16 @@ function start(){
             console.log(`[CLIENT] error(), ${m}`);
             ws.send('ws connection error!');
         });
+	ws.on('ping', (e) => { //Defines callback for ping event
+	    console.log(`${util.transTimeStampToDate(Date.now())}, get server ping `);
+            ws.pong(); //send pong frame
+	});
         // 响应收到的消息:
         ws.on('message', async function (message) {
             notifyCountDown++;
+             ws.pong();
             // 定时提醒机器人正常
             if(notifyCountDown > config.NOTIFY_COUNTDOWN) {
-                ws.send('pong');
-                api.ping();
                 notifyCountDown = 0;
             }
             const msgData = JSON.parse(message.toString());
