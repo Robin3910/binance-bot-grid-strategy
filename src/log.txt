@@ -1,1 +1,15 @@
-bot start|2022-06-5 22:54:13|topPrice: 2000| bottomPrice: 1750|startPrice: 1875|gridDistance:11.25|gridAmount: 7.2|maxGridNum: 11.11111111111111
+bot start|2022-06-9 1:22:11|topPrice: 2000| bottomPrice: 1750|startPrice: 1875|gridDistance:11.25|gridAmount: 270|maxGridNum: 11.11111111111111
+buy in|time: 2022-06-9 1:22:12| price: 1796.9793859 | cur position: 3
+buy in|time: 2022-06-9 1:56:48| price: 1785.62262994 | cur position: 4
+sell |time: 2022-06-9 3:3:51| price: 1797.05499295 | cur position: 3| matchCount: 1
+sell |time: 2022-06-9 7:58:6| price: 1808.63 | cur position: 2| matchCount: 2
+buy in|time: 2022-06-9 7:58:6| price: 1808.63 | cur position: 3
+sell |time: 2022-06-9 9:12:54| price: 1820.12 | cur position: 2| matchCount: 3
+buy in|time: 2022-06-9 10:32:54| price: 1814.73744093 | cur position: 3
+bot start|2022-06-9 10:40:16|topPrice: 2000| bottomPrice: 1750|startPrice: 1875|gridDistance:11.25|gridAmount: 270|maxGridNum: 11.11111111111111
+buy in|time: 2022-06-9 11:55:45| price: 1803.36091457 | cur position: 3
+buy in|time: 2022-06-9 12:37:42| price: 1791.39753193 | cur position: 4
+sell |time: 2022-06-9 13:35:3| price: 1803.65 | cur position: 3| matchCount: 1
+buy in|time: 2022-06-9 13:39:15| price: 1791.56981002 | cur position: 4
+buy in|time: 2022-06-9 13:43:18| price: 1780.29 | cur position: 5
+sell |time: 2022-06-9 13:48:33| price: 1792 | cur position: 4| matchCount: 2
