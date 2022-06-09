@@ -78,12 +78,12 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
             (direction === -1 && nowAsksPrice <= _Grid[_Grid.length - 1].coverPrice))) {
 
         // 下卖单
-        // const orderRes = await api.placeOrder({
-        //     symbol: config.COIN,
-        //     type: 'MARKET',
-        //     side: 'SELL',
-        //     quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
-        // });
+        const orderRes = await api.placeOrder({
+             symbol: config.COIN,
+             type: 'MARKET',
+             side: 'SELL',
+             quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
+        });
 
         console.log(`sell order success`);
         _Grid.pop();
@@ -127,12 +127,12 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         if ((direction === 1 && nowBidsPrice <= startPrice) || (direction === -1 && nowAsksPrice >= startPrice)) {
             let nowPrice = direction === 1 ? nowAsksPrice : nowBidsPrice;
 
-            // const orderRes = await api.placeOrder({
-            //     symbol: config.COIN,
-            //     type: 'MARKET',
-            //     side: 'BUY',
-            //     quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
-            // });
+            const orderRes = await api.placeOrder({
+                 symbol: config.COIN,
+                 type: 'MARKET',
+                 side: 'BUY',
+                 quantity: parseFloat((_GridPointAmount / nowBidsPrice).toFixed(3))
+            });
 
             _Grid.push({
                 // 开仓价
@@ -251,9 +251,9 @@ function start(){
 
 // 每过3小时重新建立ws连接
 start();
-setInterval(()=>{
-	console.log(`${util.transTimeStampToDate(Date.now())}, rebuild websocket connection`);
-    start();
-}, 3 * 60 * 60 * 1000);
+// setInterval(()=>{
+// 	console.log(`${util.transTimeStampToDate(Date.now())}, rebuild websocket connection`);
+//     start();
+// }, 3 * 60 * 60 * 1000);
 
 // test();
