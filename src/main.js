@@ -31,7 +31,7 @@ const _GridPointDis = startPrice * gridPercent;
 // 网格每次下单量
 const _GridPointAmount = initMoney / ((startPrice - bottomPrice) / _GridPointDis);
 // 最大下单量
-const maxGridNum = (startPrice - bottomPrice) / _GridPointDis;
+const maxGridNum = Math.ceil((startPrice - bottomPrice) / _GridPointDis);
 
 fs.writeFileSync(config.LOG_FILE_PATH, `bot start|${util.transTimeStampToDate(Date.now())}|topPrice: ${topPrice}| bottomPrice: ${bottomPrice}|startPrice: ${startPrice}|gridDistance:${_GridPointDis}|gridAmount: ${_GridPointAmount}|maxGridNum: ${maxGridNum}\n`, {flag: 'a+'});
 
@@ -121,6 +121,7 @@ async function UpdateGrid(nowBidsPrice, nowAsksPrice, direction, ts) {
         // 做空方向，当前价位大于网格最后一次购买价格，并超过了一个网格间距，进行下单
         || (direction === -1 && nowBidsPrice - _Grid[_Grid.length - 1].price > _GridPointDis)) {
         if (_Grid.length >= maxGridNum) {
+	    isHandling = false;
             return;
         }
 
